@@ -1,0 +1,31 @@
+policy_module(telegram_cli, 1.0.2)
+type telegram_cli_t;
+type telegram_cli_exec_t;
+application_domain(telegram_cli_t, telegram_cli_exec_t)
+init_daemon_domain(telegram_cli_t, telegram_cli_exec_t)
+corecmd_exec_bin(telegram_cli_t)
+libs_use_ld_so(telegram_cli_t)
+# network
+dev_read_rand(telegram_cli_t)
+sysnet_dns_name_resolve(telegram_cli_t)
+allow telegram_cli_t self:tcp_socket create_stream_socket_perms;
+corenet_tcp_connect_http_port(telegram_cli_t)
+# conf_t ( all is ro )
+type telegram_cli_data_t;
+files_type(telegram_cli_data_t)
+read_files_pattern(telegram_cli_t, telegram_cli_data_t, telegram_cli_data_t)
+type telegram_cli_home_t;
+files_type(telegram_cli_home_t)
+admin_pattern(telegram_cli_t, telegram_cli_home_t)
+# postgresql connect
+postgresql_stream_connect(telegram_cli_t)
+corenet_tcp_connect_postgresql_port(telegram_cli_t)
+# dontaudit
+require {
+	type passwd_file_t;
+	type proc_t;
+}
+
+dontaudit telegram_cli_t passwd_file_t:file read;
+dontaudit telegram_cli_t proc_t:file read;
+
