@@ -1,0 +1,95 @@
+
+## <summary>policy for nmap</summary>
+
+########################################
+## <summary>
+##	Execute nmap_exec_t in the nmap domain.
+## </summary>
+## <param name="domain">
+## <summary>
+##	Domain allowed to transition.
+## </summary>
+## </param>
+#
+interface(`nmap_domtrans',`
+	gen_require(`
+		type nmap_t, nmap_exec_t;
+	')
+
+	corecmd_search_bin($1)
+	domtrans_pattern($1, nmap_exec_t, nmap_t)
+')
+
+######################################
+## <summary>
+##	Execute nmap in the caller domain.
+## </summary>
+## <param name="domain">
+##	<summary>
+##	Domain allowed access.
+##	</summary>
+## </param>
+#
+interface(`nmap_exec',`
+	gen_require(`
+		type nmap_exec_t;
+	')
+
+	corecmd_search_bin($1)
+	can_exec($1, nmap_exec_t)
+')
+
+########################################
+## <summary>
+##	Execute nmap in the nmap domain, and
+##	allow the specified role the nmap domain.
+## </summary>
+## <param name="domain">
+##	<summary>
+##	Domain allowed to transition
+##	</summary>
+## </param>
+## <param name="role">
+##	<summary>
+##	The role to be allowed the nmap domain.
+##	</summary>
+## </param>
+#
+interface(`nmap_run',`
+	gen_require(`
+		type nmap_t;
+		attribute_role nmap_roles;
+	')
+
+	nmap_domtrans($1)
+	roleattribute $2 nmap_roles;
+')
+
+########################################
+## <summary>
+##	Role access for nmap
+## </summary>
+## <param name="role">
+##	<summary>
+##	Role allowed access
+##	</summary>
+## </param>
+## <param name="domain">
+##	<summary>
+##	User domain for the role
+##	</summary>
+## </param>
+#
+interface(`nmap_role',`
+	gen_require(`
+		type nmap_t;
+		attribute_role nmap_roles;
+	')
+
+	roleattribute $1 nmap_roles;
+
+	nmap_domtrans($2)
+
+	ps_process_pattern($2, nmap_t)
+	allow $2 nmap_t:process { signull signal sigkill };
+')

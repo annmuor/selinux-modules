@@ -1,0 +1,66 @@
+policy_module(nmap, 1.0.0)
+
+########################################
+#
+# Declarations
+#
+
+attribute_role nmap_roles;
+roleattribute system_r nmap_roles;
+
+type nmap_t;
+type nmap_exec_t;
+application_domain(nmap_t, nmap_exec_t)
+role nmap_roles types nmap_t;
+
+type nmap_result_log_t;
+files_type(nmap_result_log_t)
+userdom_user_home_dir_filetrans(nmap_t, nmap_result_log_t, { dir file })
+
+########################################
+#
+# nmap local policy
+#
+allow nmap_t self:process { setrlimit };
+
+allow nmap_t self:fifo_file manage_fifo_file_perms;
+allow nmap_t self:unix_stream_socket create_stream_socket_perms;
+
+domain_use_interactive_fds(nmap_t)
+
+files_read_etc_files(nmap_t)
+
+auth_use_nsswitch(nmap_t)
+
+miscfiles_read_localization(nmap_t)
+
+sysnet_dns_name_resolve(nmap_t)
+
+optional_policy(`
+	gen_require(`
+		type user_t;
+		role user_r;
+	')
+
+	nmap_run(user_t, user_r)
+	manage_files_pattern(user_t, nmap_result_log_t, nmap_result_log_t)
+')
+
+optional_policy(`
+	gen_require(`
+		type staff_t;
+		role staff_r;
+	')
+
+	nmap_run(staff_t, staff_r)
+	manage_files_pattern(staff_t, nmap_result_log_t, nmap_result_log_t)
+')
+
+allow nmap_t self:capability { net_raw dac_override dac_read_search };
+allow nmap_t self:packet_socket { bind create getopt ioctl read setopt write };
+allow nmap_t self:rawip_socket { create setopt write };
+kernel_read_network_state(nmap_t)
+kernel_read_system_state(nmap_t)
+userdom_use_inherited_user_ptys(nmap_t)
+corenet_tcp_connect_all_ports(nmap_t)
+manage_files_pattern(nmap_t, nmap_result_log_t, nmap_result_log_t)
